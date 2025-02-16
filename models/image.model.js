@@ -8,6 +8,10 @@ const imageSchema = new mongoose.Schema(
       ref: "picslifyAlbum",
       required: true,
     },
+    cloudinaryPublicId: {
+      type: String,
+      required: true,
+    },
     name: {
       type: String,
       required: true,

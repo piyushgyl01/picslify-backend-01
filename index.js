@@ -313,6 +313,7 @@ app.post("/albums/:albumId/images", verifyToken, upload.single("file"), async (r
 
         const newImage = new Image({
             albumId,
+            cloudinaryPublicId: result.public_id,
             file: result.secure_url,
             tags: tags ? tags.split(",").map(tag => tag.trim()) : [],
             person,
@@ -378,32 +379,38 @@ app.put("/albums/:albumId/images/:imageId/favorite", verifyToken, async (req, re
 });
 
 // Delete image
+// Delete image
 app.delete("/albums/:albumId/images/:imageId", verifyToken, async (req, res) => {
-    try {
-        const { albumId, imageId } = req.params;
-        const userId = req.user.id;
+  try {
+      const { albumId, imageId } = req.params;
+      const userId = req.user.id;
 
-        const album = await Album.findById(albumId);
-        if (!album) {
-            return res.status(404).json({ message: "Album not found" });
-        }
+      const album = await Album.findById(albumId);
+      if (!album) {
+          return res.status(404).json({ message: "Album not found" });
+      }
 
-        if (userId !== album.owner) {
-            return res.status(403).json({ message: "Not authorized" });
-        }
+      if (userId !== album.owner) {
+          return res.status(403).json({ message: "Not authorized" });
+      }
 
-        const image = await Image.findByIdAndDelete(imageId);
-        if (!image) {
-            return res.status(404).json({ message: "Image not found" });
-        }
+      const image = await Image.findById(imageId);
+      if (!image) {
+          return res.status(404).json({ message: "Image not found" });
+      }
 
-        // Could also delete from Cloudinary here if needed
-        // await cloudinary.uploader.destroy(image.cloudinaryId);
+      // Delete from Cloudinary
+      if (image.cloudinaryPublicId) {
+          await cloudinary.uploader.destroy(image.cloudinaryPublicId);
+      }
 
-        res.json({ message: "Image deleted successfully" });
-    } catch (error) {
-        res.status(500).json({ error: "Internal server error" });
-    }
+      // Delete from database
+      await Image.findByIdAndDelete(imageId);
+
+      res.json({ message: "Image deleted successfully" });
+  } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // Add these routes to your existing code
