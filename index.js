@@ -467,8 +467,6 @@ app.put("/profile/password", verifyToken, async (req, res) => {
     }
 });
 
-// Add this route to your existing code
-
 app.get("/search/images", verifyToken, async (req, res) => {
     try {
         const { query, tags, person, albumId, favorite } = req.query;
